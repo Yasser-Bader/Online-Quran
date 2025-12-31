@@ -23,8 +23,11 @@ func initConnection() *gorm.DB {
 		log.Fatal(err)
 	}
 
-	db.AutoMigrate(&models.Students{}, &models.Slots{},
-		&models.Bookings{}, &models.Progres{})
+	db.AutoMigrate(
+		&models.Students{}, 
+		&models.Slots{},
+		&models.Bookings{}, 
+		&models.Progres{})
 
 	return db
 }

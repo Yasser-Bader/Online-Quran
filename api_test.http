@@ -1,0 +1,13 @@
+
+
+
+
+POST https://effective-space-goggles-gwxj4p9q942w7v7-8080.app.github.dev/api/v1/student/create
+Content-Type: application/json
+{
+        "first_name": "Ali",
+        "middel_name":"badr",
+        "last_name":"ahmed",
+        "email": "ali@test.com",
+        "phone": "0102786544"
+}
