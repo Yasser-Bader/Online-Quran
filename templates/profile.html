@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <title>ملف الطالب</title>
+</head>
+<body class="p-4 bg-light">
+    <div class="container bg-white p-4 rounded shadow">
+        <h2 class="text-center text-primary">سجل متابعة الحفظ</h2>
+        <h4 class="text-center mb-4">أهلاً بك يا {{ .student.FirstName }}</h4>
+
+        <table class="table table-striped mt-3">
+            <thead class="table-dark">
+                <tr><th>التاريخ</th><th>السورة</th><th>الآيات</th><th>التقدير</th><th>ملاحظات</th></tr>
+            </thead>
+            <tbody>
+                {{ range .progress }}
+                <tr>
+                    <td>{{ .Date.Format "2006-01-02" }}</td>
+                    <td>{{ .Surah }}</td>
+                    <td>{{ .Verses }}</td>
+                    <td><span class="badge bg-info">{{ .Grade }}</span></td>
+                    <td>{{ .Notes }}</td>
+                </tr>
+                {{ end }}
+            </tbody>
+        </table>
+    </div>
+</body>
+</html>

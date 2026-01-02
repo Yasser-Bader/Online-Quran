@@ -30,6 +30,7 @@ import (
 package routes
 
 import (
+	"time"
 	"fmt"
 	"net/http"
 	"path/filepath"
@@ -83,56 +84,118 @@ func Show_students(c *gin.Context) {
 	})
 }
 
-// عرض صفحة رفع الإيصال (تستقبل ID الطالب)
-func Show_Booking(c *gin.Context) {
-	studentID := c.Query("student_id")
-	c.HTML(http.StatusOK, "booking.html", gin.H{"student_id": studentID})
+//////////////
+// --- 1. دوال المواعيد (الشيخ يضيف موعد) ---
+func Admin_AddSlot(c *gin.Context) {
+	day := c.PostForm("day")
+	timeStr := c.PostForm("time")
+
+	slot := models.Slots{Day: day, Time: timeStr, IsBooked: false}
+	config.ConnectDB().Create(&slot)
+
+	c.Redirect(http.StatusFound, "/admin/dashboard")
 }
 
-// استقبال الصورة وحفظ الحجز
+// --- 2. تحديث صفحة الحجز (لعرض المواعيد للطالب) ---
+func Show_Booking(c *gin.Context) {
+	studentID := c.Query("student_id")
+	
+	// جلب المواعيد المتاحة فقط (غير المحجوزة)
+	var slots []models.Slots
+	config.ConnectDB().Where("is_booked = ?", false).Find(&slots)
+
+	c.HTML(http.StatusOK, "booking.html", gin.H{
+		"student_id": studentID, 
+		"slots": slots, // نرسل المواعيد للصفحة
+	})
+}
+
+// --- 3. تحديث دالة الحجز (لحفظ الموعد المختار) ---
 func Create_Booking(c *gin.Context) {
 	studentID := c.PostForm("student_id")
-	
-	// استقبال الملف
-	file, err := c.FormFile("receipt")
-	if err != nil {
-		c.HTML(http.StatusBadRequest, "booking.html", gin.H{"error": "يجب رفع صورة الإيصال"})
-		return
-	}
+	slotID := c.PostForm("slot_id") // نستقبل رقم الموعد
 
-	// حفظ الملف في مجلد uploads
+	// ... (كود رفع الصورة كما هو) ...
+	file, _ := c.FormFile("receipt")
 	filename := fmt.Sprintf("%s_%s", studentID, filepath.Base(file.Filename))
-	dst := "./uploads/" + filename
-	if err := c.SaveUploadedFile(file, dst); err != nil {
-		c.HTML(http.StatusInternalServerError, "booking.html", gin.H{"error": "فشل حفظ الصورة"})
-		return
-	}
+	c.SaveUploadedFile(file, "./uploads/"+filename)
 
-	// حفظ في قاعدة البيانات
 	idUint, _ := strconv.ParseUint(studentID, 10, 64)
-	booking := models.Bookings{
+	slotUint, _ := strconv.ParseUint(slotID, 10, 64)
+
+	booking := models.Booking{
 		StudentID:    uint(idUint),
+		SlotID:       uint(slotUint), // حفظ الموعد
 		PaymentImage: filename,
 		Status:       "pending",
 	}
 	config.ConnectDB().Create(&booking)
-
-	c.HTML(http.StatusOK, "booking.html", gin.H{"message": "تم إرسال الإيصال بنجاح! سيتم مراجعته وإرسال الرابط لك قريباً."})
-}
-
-// --- لوحة الأدمن (لك وللشيخ) ---
-
-// عرض كل الحجوزات المعلقة
-func Admin_Dashboard(c *gin.Context) {
-	var bookings []models.Bookings
-	// هات الحجوزات واعمل Join مع جدول الطلاب عشان نعرف اسم الطالب
-	config.ConnectDB().Preload("Student").Where("status = ?", "pending").Find(&bookings)
 	
-	c.HTML(http.StatusOK, "admin.html", gin.H{"bookings": bookings})
+	// تحديث الموعد ليصبح محجوزاً
+	config.ConnectDB().Model(&models.Slots{}).Where("id = ?", slotUint).Update("is_booked", true)
+
+	c.HTML(http.StatusOK, "booking.html", gin.H{"message": "تم الحجز بنجاح!"})
 }
 
-// زر الموافقة
-func Admin_Approve(c *gin.Context) {
+// --- 4. دالة إضافة الدرجات (للشيخ) ---
+func Admin_AddGrade(c *gin.Context) {
+	studentID := c.PostForm("student_id")
+	surah := c.PostForm("surah")
+	verses := c.PostForm("verses")
+	grade := c.PostForm("grade")
+	notes := c.PostForm("notes")
+
+	idUint, _ := strconv.ParseUint(studentID, 10, 64)
+	progress := models.Progres{
+		StudentID: uint(idUint),
+		Date:      time.Now(),
+		Surah:     surah,
+		Verses:    verses,
+		Grade:     grade,
+		Notes:     notes,
+	}
+	config.ConnectDB().Create(&progress)
+
+	c.Redirect(http.StatusFound, "/admin/dashboard")
+}
+
+// --- 5. صفحة الطالب الخاصة (لعرض الدرجات) ---
+func Show_Student_Profile(c *gin.Context) {
+	token := c.Param("token")
+	var student models.Students
+	
+	// البحث عن الطالب بالتوكن
+	if err := config.ConnectDB().Where("magic_link_token = ?", token).First(&student).Error; err != nil {
+		c.String(404, "رابط غير صالح")
+		return
+	}
+
+	// جلب درجاته
+	var progress []models.Progres
+	config.ConnectDB().Where("student_id = ?", student.ID).Find(&progress)
+
+	c.HTML(http.StatusOK, "profile.html", gin.H{
+		"student": student,
+		"progress": progress,
+	})
+}
+
+// --- 6. تحديث لوحة الأدمن (لجلب الطلاب للمنسدلة) ---
+func Admin_Dashboard(c *gin.Context) {
+	var bookings []models.Booking
+	var students []models.Students // لجلب قائمة الطلاب للدرجات
+	
+	db := config.ConnectDB()
+	db.Preload("Student").Preload("Slot").Where("status = ?", "pending").Find(&bookings) // لاحظ Preload Slot
+	db.Find(&students) // هات كل الطلاب
+
+	c.HTML(http.StatusOK, "admin.html", gin.H{
+		"bookings": bookings,
+		"students": students,
+	})
+}
+//////////////////////////////////////
+/*func Admin_Approve(c *gin.Context) {
 	bookingID := c.Param("id")
 	var booking models.Bookings
 	
@@ -158,5 +221,49 @@ func Admin_Approve(c *gin.Context) {
 	go utils.SendConfirmationEmail(booking.Student.Email, booking.Student.FirstName, zoomLink, booking.Student.MagicLinkToken)
 
 	// إعادة توجيه للأدمن
+	c.Redirect(http.StatusFound, "/admin/dashboard")
+}*/
+func Admin_Approve(c *gin.Context) {
+	bookingID := c.Param("id")
+	var booking models.Booking
+	
+	db := config.ConnectDB()
+
+	// 1. البحث عن الحجز + بيانات الطالب (مهم جداً Preload)
+	if err := db.Preload("Student").First(&booking, bookingID).Error; err != nil {
+		c.JSON(404, gin.H{"error": "الحجز غير موجود"})
+		return
+	}
+
+	// 2. تحديث الحالة
+	booking.Status = "confirmed"
+	db.Save(&booking)
+
+	// 3. إنشاء كود سري للطالب لو مش موجود
+	if booking.Student.MagicLinkToken == "" {
+		booking.Student.MagicLinkToken = uuid.New().String()
+		db.Save(&booking.Student)
+	}
+
+	// 4. إرسال الإيميل باستخدام الكود الجديد
+	fmt.Println("📧 جاري إرسال الإيميل للطالب:", booking.Student.Email)
+	
+	// رابط الزوم الثابت (يمكنك تغييره لاحقاً)
+	zoomLink := "https://zoom.us/j/123456789"
+
+	err := utils.SendConfirmationEmail(
+		booking.Student.Email,
+		booking.Student.FirstName,
+		zoomLink,
+		booking.Student.MagicLinkToken,
+	)
+
+	if err != nil {
+		fmt.Println("❌ فشل الإرسال:", err)
+	} else {
+		fmt.Println("✅ تم إرسال الإيميل بنجاح!")
+	}
+
+	// العودة لصفحة الأدمن
 	c.Redirect(http.StatusFound, "/admin/dashboard")
 }

@@ -1,15 +1,8 @@
 package models
 
-import (
-	"time"
-	
-)
-type Slots struct{
-	ID             uint64 `gorm:"primaryKey"`
-	CreatedAt      time.Time
-	UpdatedAt      time.Time
-	DayOfWeek string `gorm:"type:enum('Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday');default:'Sunday'"`
-	StartTime string  `gorm:"type:time"`
-	IsActive bool
-	
+type Slots struct {
+	ID        uint   `gorm:"primaryKey"`
+	Day       string // اليوم (السبت، الأحد...)
+	Time      string // الساعة (06:00 م)
+	IsBooked  bool   `gorm:"default:false"` // هل تم حجزه؟
 }

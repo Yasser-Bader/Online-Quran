@@ -22,7 +22,26 @@ func initConnection() *gorm.DB {
 	if err != nil {
 		log.Fatal(err)
 	}
+	db = db.Debug() 
 
+        // تأكد أنك تمرر كل الجداول هنا
+        err = db.AutoMigrate(
+            &models.Students{}, 
+            &models.Booking{},  // تأكد أنها مكتوبة هنا
+            &models.Slots{},    // ومكتوبة هنا
+            &models.Progres{},
+			)//
+		if err != nil {
+            log.Fatal("❌ خطأ أثناء إنشاء الجداول:", err)
+        } else {
+            // رسالة تأكيد ستظهر لك في التيرمينال لو كله تمام
+            log.Println("✅ تم إنشاء جميع الجداول بنجاح!")
+        }
+
+        connectionInstance = db
+        return connectionInstance
+}
+/*
 	db.AutoMigrate(
 		&models.Students{}, 
 		&models.Slots{},
@@ -31,7 +50,7 @@ func initConnection() *gorm.DB {
 
 	return db
 }
-
+*/
 func ConnectDB() *gorm.DB {
 	if connectionInstance == nil {
 		connectionInstance = initConnection()

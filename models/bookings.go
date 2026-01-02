@@ -17,7 +17,7 @@ import (
 	"time"
 	"gorm.io/gorm"
 )
-
+/*
 type Bookings struct {
 	ID        uint           `gorm:"primaryKey"`
 	CreatedAt time.Time
@@ -28,4 +28,18 @@ type Bookings struct {
 	PaymentImage string      // مسار الصورة المحفوظة
 	Status       string      `gorm:"default:'pending'"` // pending, confirmed
 	ZoomLink     string      // سنخزنه هنا أو نرسله من الإعدادات
+}
+*/
+type Booking struct {
+	ID           uint           `gorm:"primaryKey"`
+	CreatedAt    time.Time
+	UpdatedAt    time.Time
+	DeletedAt    gorm.DeletedAt `gorm:"index"`
+	StudentID    uint           
+	Student      Students       `gorm:"foreignKey:StudentID"` 
+	SlotID       uint           // <-- الإضافة الجديدة
+	Slot         Slots          `gorm:"foreignKey:SlotID"` // العلاقة
+	PaymentImage string
+	Status       string         `gorm:"default:'pending'"`
+	ZoomLink     string
 }

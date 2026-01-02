@@ -1,5 +1,4 @@
 package main
-
 import(
 	//"fmt"
 	"os"
@@ -9,8 +8,8 @@ import(
 
 
 )
-
-/*func main(){
+/*
+func main(){
 	config.ConnectDB()
     
 	r := gin.Default()
@@ -66,9 +65,9 @@ func main() {
 
     // ... باقي الكود ...
     r.Run(":8080")
-}*/
-
-
+}
+/////////////////////////////////////////////////////
+*/
 func main() {
 	config.ConnectDB()
 
@@ -98,6 +97,37 @@ func main() {
 	// --- مسارات الأدمن (اختياري الآن) ---
 	r.GET("/admin/dashboard", routes.Admin_Dashboard)
 	r.POST("/admin/approve/:id", routes.Admin_Approve)
+// مسارات الأدمن الجديدة
+    r.POST("/admin/add-slot", routes.Admin_AddSlot)
+    r.POST("/admin/add-grade", routes.Admin_AddGrade)
 
+    // مسار بروفايل الطالب (السحري)
+    r.GET("/student/:token", routes.Show_Student_Profile)
 	r.Run(":8080")
 }
+/*
+import (
+	"fmt"
+	"net/smtp"
+)
+
+func main() {
+	// ضع بياناتك هنا للتجربة
+	from := "yasserbadr76@gmail.com"
+	password := "vnkbrcvndzqmjlue"
+	to := "yasserbader010@gmail.com" // ارسل لنفسك
+
+	msg := []byte("To: " + to + "\r\n" +
+		"Subject: Test Email form Go\r\n" +
+		"\r\n" +
+		"This is a test email.")
+
+	auth := smtp.PlainAuth("", from, password, "smtp.gmail.com")
+	err := smtp.SendMail("smtp.gmail.com:587", auth, from, []string{to}, msg)
+
+	if err != nil {
+		fmt.Println("❌ الخطأ هو:", err)
+	} else {
+		fmt.Println("✅ الإيميل شغال تمام!")
+	}
+}*/

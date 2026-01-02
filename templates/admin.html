@@ -22,13 +22,76 @@
                 <td><a href="/uploads/{{ .PaymentImage }}" target="_blank">عرض الصورة</a></td>
                 <td>
                     <form action="/admin/approve/{{ .ID }}" method="POST">
-                        <button class="btn btn-primary btn-sm">تأكيد وإرسال الإيميل</button>
+                        <button type="submit" class="btn btn-primary btn-sm">تأكيد وإرسال الإيميل</button>
+                    </form>
+                    
+                </td>
+            </tr>
+            {{ end }}
+        </tbody>
+    </table>
+    <div class="container">
+    <h2 class="text-center my-4">لوحة تحكم الشيخ</h2>
+
+    <div class="card mb-4 p-3 bg-light">
+        <h5>📅 إضافة موعد متاح جديد</h5>
+        <form action="/admin/add-slot" method="POST" class="d-flex gap-2">
+            <select name="day" class="form-select">
+                <option>السبت</option><option>الأحد</option><option>الاثنين</option>
+                <option>الثلاثاء</option><option>الأربعاء</option><option>الخميس</option><option>الجمعة</option>
+            </select>
+            <input type="time" name="time" class="form-control">
+            <button class="btn btn-primary">إضافة</button>
+        </form>
+    </div>
+
+    <h4>طلبات الحجز الجديدة</h4>
+    <table class="table table-bordered">
+        <thead>
+            <tr><th>الطالب</th><th>الموعد المطلوب</th><th>الإيصال</th><th>إجراء</th></tr>
+        </thead>
+        <tbody>
+            {{ range .bookings }}
+            <tr>
+                <td>{{ .Student.FirstName }}</td>
+                <td>{{ .Slot.Day }} {{ .Slot.Time }}</td> <td><a href="/uploads/{{ .PaymentImage }}" target="_blank">صورة</a></td>
+                <td>
+                    <form action="/admin/approve/{{ .ID }}" method="POST">
+                        <button class="btn btn-success btn-sm">تأكيد</button>
                     </form>
                 </td>
             </tr>
             {{ end }}
         </tbody>
     </table>
+
+    <hr class="my-5">
+
+    <div class="card p-3 border-success">
+        <h5 class="text-success">📝 رصد درجة لطالب</h5>
+        <form action="/admin/add-grade" method="POST">
+            <div class="mb-2">
+                <label>اختر الطالب:</label>
+                <select name="student_id" class="form-select">
+                    {{ range .students }}
+                        <option value="{{ .ID }}">{{ .FirstName }} {{ .LastName }}</option>
+                    {{ end }}
+                </select>
+            </div>
+            <div class="row">
+                <div class="col"><input type="text" name="surah" class="form-control" placeholder="اسم السورة"></div>
+                <div class="col"><input type="text" name="verses" class="form-control" placeholder="الآيات (1-10)"></div>
+                <div class="col">
+                    <select name="grade" class="form-select">
+                        <option>ممتاز</option><option>جيد جداً</option><option>جيد</option><option>إعادة</option>
+                    </select>
+                </div>
+            </div>
+            <textarea name="notes" class="form-control mt-2" placeholder="ملاحظات الشيخ..."></textarea>
+            <button class="btn btn-success mt-2 w-100">حفظ الدرجة</button>
+        </form>
+    </div>
+</div>
 </div>
 </body>
 </html>

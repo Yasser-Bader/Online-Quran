@@ -23,6 +23,27 @@
 
         <button type="submit" class="btn btn-success w-100">إرسال للتأكيد</button>
     </form>
+    
+    <form action="/booking/upload" method="POST" enctype="multipart/form-data">
+    <input type="hidden" name="student_id" value="{{ .student_id }}">
+    
+    <div class="mb-3">
+        <label class="form-label">اختر موعد الحصة</label>
+        <select name="slot_id" class="form-select" required>
+            <option value="" disabled selected>-- اختر الموعد المناسب --</option>
+            {{ range .slots }}
+                <option value="{{ .ID }}">{{ .Day }} - الساعة {{ .Time }}</option>
+            {{ end }}
+        </select>
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">صورة الإيصال</label>
+        <input type="file" name="receipt" class="form-control" required>
+    </div>
+
+    <button type="submit" class="btn btn-success w-100">حجز وإرسال</button>
+</form>
 </div>
 </body>
 </html>

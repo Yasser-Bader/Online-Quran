@@ -3,21 +3,20 @@ package utils
 import (
 	"fmt"
 	"net/smtp"
-	//"strings"
 	"time"
 )
 
-// إعدادات الإيميل (يفضل وضعها في .env لاحقاً)
+// إعدادات الإيميل (ضع بياناتك الصحيحة هنا)
 const (
-	SMTPHost = "smtp.gmail.com"
-	SMTPPort = "587"
-	SenderEmail = "YOUR_EMAIL@gmail.com" // ضع إيميلك هنا
-	SenderPass  = "YOUR_APP_PASSWORD"    // ضع كلمة مرور التطبيق هنا
+	SMTPHost    = "smtp.gmail.com"
+	SMTPPort    = "587"
+	SenderEmail = "yasserbadr76@gmail.com" // إيميلك
+	SenderPass = "vnkbrcvndzqmjlue"    // ⚠️ كلمة السر بدون مسافات نهائيا
 )
 
 func SendConfirmationEmail(toEmail, studentName, zoomLink, magicToken string) error {
-	// 1. تجهيز ملف التقويم ICS
-	meetingTime := time.Now().Add(24 * time.Hour) // مثال: الموعد غداً (يمكن تغييره)
+	// 1. تجهيز ملف التقويم (Calendar Invite)
+	meetingTime := time.Now().Add(24 * time.Hour)
 	icsContent := fmt.Sprintf(`BEGIN:VCALENDAR
 VERSION:2.0
 PRODID:-//QuranApp//V1//EN
@@ -32,19 +31,21 @@ LOCATION:Zoom
 END:VEVENT
 END:VCALENDAR`, time.Now().Unix(), time.Now().Format("20060102T150405"), meetingTime.Format("20060102T150405"), meetingTime.Add(1*time.Hour).Format("20060102T150405"), zoomLink)
 
-	// 2. تجهيز محتوى الإيميل
+	// 2. نص الرسالة
 	subject := "تأكيد الحجز وتفاصيل الحصة"
 	body := fmt.Sprintf(`
-مرحباً %s،
+السلام عليكم %s،
 
-تم تأكيد حجزك واستلام الدفع بنجاح!
+تم تأكيد حجزك بنجاح!
 رابط الزوم: %s
-رابط متابعة درجاتك (سري): https://your-site.com/student/%s
+
+رابط متابعة الدرجات الخاص بك:
+https://your-app-url.com/student/%s
 
 مرفق ملف التقويم لإضافته لجدولك.
 `, studentName, zoomLink, magicToken)
 
-	// 3. بناء الرسالة (MIME) لإرفاق الملف
+	// 3. بناء هيكل الإيميل (Header + Body + Attachment)
 	boundary := "my-boundary-123"
 	msg := []byte(fmt.Sprintf("To: %s\r\n"+
 		"Subject: %s\r\n"+
@@ -58,9 +59,11 @@ END:VCALENDAR`, time.Now().Unix(), time.Now().Format("20060102T150405"), meeting
 		"Content-Transfer-Encoding: base64\r\n"+
 		"Content-Disposition: attachment; filename=\"invite.ics\"\r\n\r\n"+
 		"%s\r\n"+
-		"--%s--", toEmail, subject, boundary, boundary, body, boundary, icsContent, boundary)) // ملاحظة: في الإنتاج يفضل تشفير icsContent بـ Base64 فعلياً، لكن للتجربة النصية قد يعمل
+		"--%s--", toEmail, subject, boundary, boundary, body, boundary, icsContent, boundary))
 
-	// 4. الإرسال
+	// 4. الإرسال الفعلي
 	auth := smtp.PlainAuth("", SenderEmail, SenderPass, SMTPHost)
-	return smtp.SendMail(SMTPHost+":"+SMTPPort, auth, SenderEmail, []string{toEmail}, msg)
+	err := smtp.SendMail(SMTPHost+":"+SMTPPort, auth, SenderEmail, []string{toEmail}, msg)
+	
+	return err
 }
