@@ -93,13 +93,24 @@ func main() {
 		route.POST("/student/create", routes.Create_students)
 		route.GET("/student/show", routes.Show_students)
 	}
+	//---------------------------------------------------------
+	
+	// تعريف حسابات الأدمن (يمكنك تغيير الاسم وكلمة السر من هنا)
+	// "admin" هو اسم المستخدم
+	// "123456" هي كلمة المرور
+	adminAccounts := gin.Accounts{
+		"admin": "123456",
+	}
 
-	// --- مسارات الأدمن (اختياري الآن) ---
-	r.GET("/admin/dashboard", routes.Admin_Dashboard)
-	r.POST("/admin/approve/:id", routes.Admin_Approve)
-// مسارات الأدمن الجديدة
-    r.POST("/admin/add-slot", routes.Admin_AddSlot)
-    r.POST("/admin/add-grade", routes.Admin_AddGrade)
+	// إنشاء مجموعة مسارات محمية
+	adminGroup := r.Group("/admin", gin.BasicAuth(adminAccounts))
+	{
+		// أي رابط نضعه هنا سيطلب كلمة سر
+		adminGroup.GET("/dashboard", routes.Admin_Dashboard)
+		adminGroup.POST("/approve/:id", routes.Admin_Approve)
+		adminGroup.POST("/add-slot", routes.Admin_AddSlot)
+		adminGroup.POST("/add-grade", routes.Admin_AddGrade)
+	}
 
     // مسار بروفايل الطالب (السحري)
     r.GET("/student/:token", routes.Show_Student_Profile)

@@ -160,25 +160,29 @@ func Admin_AddGrade(c *gin.Context) {
 }
 
 // --- 5. صفحة الطالب الخاصة (لعرض الدرجات) ---
+// دالة عرض ملف الطالب (باستخدام الرابط السري)
 func Show_Student_Profile(c *gin.Context) {
 	token := c.Param("token")
 	var student models.Students
 	
-	// البحث عن الطالب بالتوكن
+	// 1. البحث عن الطالب باستخدام التوكن
+	// نستخدم Preload لجلب الحجوزات أيضاً إذا أردت عرضها (اختياري)
 	if err := config.ConnectDB().Where("magic_link_token = ?", token).First(&student).Error; err != nil {
-		c.String(404, "رابط غير صالح")
+		c.HTML(http.StatusNotFound, "profile.html", gin.H{"error": "الرابط غير صحيح أو منتهي الصلاحية"})
 		return
 	}
 
-	// جلب درجاته
+	// 2. جلب سجل الدرجات لهذا الطالب مرتبة بالأحدث
 	var progress []models.Progres
-	config.ConnectDB().Where("student_id = ?", student.ID).Find(&progress)
+	config.ConnectDB().Where("student_id = ?", student.ID).Order("date desc").Find(&progress)
 
+	// 3. عرض الصفحة
 	c.HTML(http.StatusOK, "profile.html", gin.H{
-		"student": student,
+		"student":  student,
 		"progress": progress,
 	})
 }
+// ////////////////////////////////////////////////
 
 // --- 6. تحديث لوحة الأدمن (لجلب الطلاب للمنسدلة) ---
 func Admin_Dashboard(c *gin.Context) {
