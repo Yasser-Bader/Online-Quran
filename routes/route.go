@@ -36,10 +36,8 @@ import (
 	"path/filepath"
 	"strconv"
 	"github.com/gin-gonic/gin"
-	"github.com/google/uuid"
 	"Online-Quran/config"
 	"Online-Quran/models"
-	"Online-Quran/utils" // استيراد ملف الإيميل
 )
 // --- صفحة الحجز (للطالب) ---
 
@@ -85,7 +83,7 @@ func Show_students(c *gin.Context) {
 }
 
 //////////////
-// --- 1. دوال المواعيد (الشيخ يضيف موعد) ---
+/* -- ملغي - 1. دوال المواعيد (الشيخ يضيف موعد) ---
 func Admin_AddSlot(c *gin.Context) {
 	day := c.PostForm("day")
 	timeStr := c.PostForm("time")
@@ -95,9 +93,9 @@ func Admin_AddSlot(c *gin.Context) {
 
 	c.Redirect(http.StatusFound, "/admin/dashboard")
 }
-
+*/
 // --- 2. تحديث صفحة الحجز (لعرض المواعيد للطالب) ---
-func Show_Booking(c *gin.Context) {
+/*func Show_Booking(c *gin.Context) {
 	studentID := c.Query("student_id")
 	
 	// جلب المواعيد المتاحة فقط (غير المحجوزة)
@@ -135,6 +133,63 @@ func Create_Booking(c *gin.Context) {
 	config.ConnectDB().Model(&models.Slots{}).Where("id = ?", slotUint).Update("is_booked", true)
 
 	c.HTML(http.StatusOK, "booking.html", gin.H{"message": "تم الحجز بنجاح!"})
+}
+*/
+// --- تحديث: عرض صفحة الحجز (بناءً على مستوى الطالب) ---
+func Show_Booking(c *gin.Context) {
+	studentID := c.Query("student_id")
+	
+	// 1. جلب بيانات الطالب لنعرف مستواه
+	var student models.Students
+	if err := config.ConnectDB().First(&student, studentID).Error; err != nil {
+		c.String(404, "الطالب غير موجود")
+		return
+	}
+
+	// 2. جلب المواعيد المتاحة
+	var slots []models.Slots
+	config.ConnectDB().Where("is_booked = ?", false).Find(&slots)
+
+	// 3. إرسال الطالب والمواعيد لملف HTML
+	c.HTML(http.StatusOK, "booking.html", gin.H{
+		"student": student, 
+		"slots":   slots,
+	})
+}
+
+// --- تحديث: حفظ الحجز (مع السعر والنوع) ---
+func Create_Booking(c *gin.Context) {
+	studentID := c.PostForm("student_id")
+	slotID := c.PostForm("slot_id")
+	
+	// استقبال بيانات الدفع الجديدة من الفورم
+	bookingType := c.PostForm("booking_type") // مثلاً: assessment, monthly_l1
+	amountStr := c.PostForm("amount")         // السعر
+
+	// رفع الصورة
+	file, _ := c.FormFile("receipt")
+	filename := fmt.Sprintf("%s_%s", studentID, filepath.Base(file.Filename))
+	c.SaveUploadedFile(file, "./uploads/"+filename)
+
+	idUint, _ := strconv.ParseUint(studentID, 10, 64)
+	slotUint, _ := strconv.ParseUint(slotID, 10, 64)
+	amount, _ := strconv.ParseFloat(amountStr, 64) // تحويل السعر لرقم
+
+	booking := models.Booking{
+		StudentID:    uint(idUint),
+		SlotID:       uint(slotUint),
+		PaymentImage: filename,
+		Status:       "pending",
+		BookingType:  bookingType, // حفظ النوع
+		Amount:       amount,      // حفظ المبلغ
+	}
+	
+	config.ConnectDB().Create(&booking)
+	
+	// تحديث الموعد ليصبح محجوزاً
+	config.ConnectDB().Model(&models.Slots{}).Where("id = ?", slotUint).Update("is_booked", true)
+
+	c.HTML(http.StatusOK, "booking.html", gin.H{"message": "تم الحجز بنجاح! سيتم مراجعة الإيصال وتأكيد الموعد."})
 }
 
 // --- 4. دالة إضافة الدرجات (للشيخ) ---
@@ -226,7 +281,7 @@ func Admin_Dashboard(c *gin.Context) {
 
 	// إعادة توجيه للأدمن
 	c.Redirect(http.StatusFound, "/admin/dashboard")
-}*/
+}
 func Admin_Approve(c *gin.Context) {
 	bookingID := c.Param("id")
 	var booking models.Booking
@@ -270,4 +325,4 @@ func Admin_Approve(c *gin.Context) {
 
 	// العودة لصفحة الأدمن
 	c.Redirect(http.StatusFound, "/admin/dashboard")
-}
+}*/

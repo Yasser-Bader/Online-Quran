@@ -12,4 +12,5 @@ type Students struct {
 		Phone        string    `gorm:"unique" form:"phone"` // أضفنا هذا
 		Email        string    `gorm:"unique" form:"email"` // أضفنا هذا
 		MagicLinkToken string
+		Level        string `gorm:"default:'new'"` // new, level1, level2...
 }

@@ -91,6 +91,80 @@
             <button class="btn btn-success mt-2 w-100">حفظ الدرجة</button>
         </form>
     </div>
+    <div class="card mb-4 p-3 bg-light">
+    <h5>📅 إضافة موعد جديد</h5>
+    <form action="/admin/add-slot" method="POST">
+        <div class="row">
+            <div class="col">
+                <select name="day" class="form-select">
+                    <option>السبت</option><option>الأحد</option><option>...</option>
+                </select>
+            </div>
+            <div class="col">
+                <input type="time" name="time" class="form-control" required>
+            </div>
+            <div class="col">
+                <select name="mode" class="form-select">
+                    <option value="private">درس خاص (Private)</option>
+                    <option value="group">مجموعة (Group)</option>
+                </select>
+            </div>
+            <div class="col">
+                <input type="text" name="zoom_link" class="form-control" placeholder="رابط الزوم لهذا الموعد" required>
+            </div>
+            <div class="col-auto">
+                <button class="btn btn-primary">إضافة</button>
+            </div>
+        </div>
+    </form>
+</div>
+
+<div class="card mb-4 p-3 border-info">
+    <h5>🎓 تحديد مستوى الطالب (بعد الاختبار)</h5>
+    <form action="/admin/update-level" method="POST" class="d-flex gap-2">
+        <select name="student_id" class="form-select">
+            {{ range .students }}
+                <option value="{{ .ID }}">{{ .FirstName }} {{ .LastName }} ({{ .Level }})</option>
+            {{ end }}
+        </select>
+        <select name="level" class="form-select">
+            <option value="level1">المستوى الأول (جزء عم)</option>
+            <option value="level2">المستوى الثاني (جزء تبارك)</option>
+            <option value="advanced">مستوى متقدم</option>
+        </select>
+        <button class="btn btn-info text-white">تحديث المستوى</button>
+    </form>
+</div>
+<div class="card mb-4 p-3 bg-light">
+    <h5>📅 إضافة موعد جديد</h5>
+    <form action="/admin/add-slot" method="POST">
+        <div class="row">
+            <div class="col-md-2">
+                <select name="day" class="form-select">
+                    <option>السبت</option><option>الأحد</option><option>الاثنين</option>
+                    <option>الثلاثاء</option><option>الأربعاء</option><option>الخميس</option><option>الجمعة</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <input type="time" name="time" class="form-control" required>
+            </div>
+            <div class="col-md-3">
+                <select name="mode" class="form-select">
+                    <option value="private">درس خاص (Private)</option>
+                    <option value="group">مجموعة (Group)</option>
+                    <option value="assessment" class="text-danger fw-bold">🔵 تحديد مستوى (Assessment)</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <input type="text" name="zoom_link" class="form-control" placeholder="رابط الزوم لهذا الموعد" required>
+            </div>
+            <div class="col-md-2">
+                <button class="btn btn-primary w-100">إضافة</button>
+            </div>
+        </div>
+    </form>
+</div>
+
 </div>
 </div>
 </body>

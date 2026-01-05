@@ -82,10 +82,24 @@ func main() {
 	// جعل مجلد الصور متاحاً للمتصفح (عشان الأدمن يشوف الصور)
 	r.Static("/uploads", "./uploads")
 
+		// الصفحة الرئيسية الآن هي التسجيل المدمج
+    r.GET("/", routes.Show_Register_Page)
+    r.POST("/register-and-book", routes.Register_And_Book)
+
+    // مسارات الطلاب القدامى
+    r.GET("/login", routes.Show_Login)
+    r.POST("/login-check", routes.Check_Login)
+    
+    // صفحة الحجز (تستخدم للطلاب القدامى الآن بشكل أساسي)
+    r.GET("/booking", routes.Show_Booking)
+    r.POST("/booking/upload", routes.Create_Booking)
+
+	
+
 	// --- المسارات العامة ---
-	r.GET("/", routes.Show_Form)                 // الصفحة الرئيسية (تسجيل الطالب)
-	r.GET("/booking", routes.Show_Booking)       // صفحة الحجز (التي تظهر فيها المشكلة)
-	r.POST("/booking/upload", routes.Create_Booking) // رابط رفع الصورة
+	//r.GET("/", routes.Show_Form)                 // الصفحة الرئيسية (تسجيل الطالب)
+	//r.GET("/booking", routes.Show_Booking)       // صفحة الحجز (التي تظهر فيها المشكلة)
+	//r.POST("/booking/upload", routes.Create_Booking) // رابط رفع الصورة
 
 	// --- مسارات الـ API القديمة ---
 	route := r.Group("/api/v1")
@@ -110,10 +124,12 @@ func main() {
 		adminGroup.POST("/approve/:id", routes.Admin_Approve)
 		adminGroup.POST("/add-slot", routes.Admin_AddSlot)
 		adminGroup.POST("/add-grade", routes.Admin_AddGrade)
+		adminGroup.POST("/update-level", routes.Admin_UpdateStudentLevel)
 	}
 
     // مسار بروفايل الطالب (السحري)
     r.GET("/student/:token", routes.Show_Student_Profile)
+
 	r.Run(":8080")
 }
 /*

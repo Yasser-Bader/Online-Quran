@@ -124,7 +124,7 @@ END:VCALENDAR`,
 رابط الزوم: %s
 
 رابط متابعة الدرجات الخاص بك:
-https://your-app-url.com/student/%s
+https://effective-space-goggles-gwxj4p9q942w7v7-8080.app.github.dev/student/%s
 
 مرفق ملف التقويم لإضافته لجدولك.
 `, studentName, zoomLink, magicToken)

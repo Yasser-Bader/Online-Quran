@@ -42,4 +42,6 @@ type Booking struct {
 	PaymentImage string
 	Status       string         `gorm:"default:'pending'"`
 	ZoomLink     string
+	BookingType  string  // نوع الحجز (تحديد مستوى / اشتراك شهري / حصة)
+	Amount       float64 // المبلغ ال
 }
