@@ -1,171 +1,352 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
+    <meta charset="UTF-8">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <title>لوحة الإدارة</title>
+    <title>لوحة تحكم الشيخ</title>
+    <style>
+        .level-badge { font-size: 0.9em; padding: 5px 10px; }
+        .zoom-btn { text-decoration: none; font-weight: bold; }
+    </style>
 </head>
-<body class="p-4">
-<div class="container">
-    <h2>طلبات الحجز المعلقة</h2>
-    <table class="table table-bordered mt-3">
-        <thead>
-            <tr>
-                <th>اسم الطالب</th>
-                <th>الإيصال</th>
-                <th>إجراء</th>
-            </tr>
-        </thead>
-        <tbody>
-            {{ range .bookings }}
-            <tr>
-                <td>{{ .Student.FirstName }} {{ .Student.LastName }}</td>
-                <td><a href="/uploads/{{ .PaymentImage }}" target="_blank">عرض الصورة</a></td>
-                <td>
-                    <form action="/admin/approve/{{ .ID }}" method="POST">
-                        <button type="submit" class="btn btn-primary btn-sm">تأكيد وإرسال الإيميل</button>
-                    </form>
-                    
-                </td>
-            </tr>
-            {{ end }}
-        </tbody>
-    </table>
-    <div class="container">
-    <h2 class="text-center my-4">لوحة تحكم الشيخ</h2>
+<body class="bg-light p-4">
 
-    <div class="card mb-4 p-3 bg-light">
-        <h5>📅 إضافة موعد متاح جديد</h5>
-        <form action="/admin/add-slot" method="POST" class="d-flex gap-2">
-            <select name="day" class="form-select">
-                <option>السبت</option><option>الأحد</option><option>الاثنين</option>
-                <option>الثلاثاء</option><option>الأربعاء</option><option>الخميس</option><option>الجمعة</option>
-            </select>
-            <input type="time" name="time" class="form-control">
-            <button class="btn btn-primary">إضافة</button>
-        </form>
-    </div>
+<div class="container-fluid">
+    <h2 class="text-center mb-4 text-primary fw-bold">لوحة تحكم المنصة</h2>
 
-    <h4>طلبات الحجز الجديدة</h4>
-    <table class="table table-bordered">
-        <thead>
-            <tr><th>الطالب</th><th>الموعد المطلوب</th><th>الإيصال</th><th>إجراء</th></tr>
-        </thead>
-        <tbody>
-            {{ range .bookings }}
-            <tr>
-                <td>{{ .Student.FirstName }}</td>
-                <td>{{ .Slot.Day }} {{ .Slot.Time }}</td> <td><a href="/uploads/{{ .PaymentImage }}" target="_blank">صورة</a></td>
-                <td>
-                    <form action="/admin/approve/{{ .ID }}" method="POST">
-                        <button class="btn btn-success btn-sm">تأكيد</button>
-                    </form>
-                </td>
-            </tr>
-            {{ end }}
-        </tbody>
-    </table>
+    <ul class="nav nav-tabs mb-4" id="myTab" role="tablist">
+        <li class="nav-item">
+            <button class="nav-link active fw-bold" id="confirmed-tab" data-bs-toggle="tab" data-bs-target="#confirmed" type="button">📅 جدول المواعيد (المؤكدة)</button>
+        </li>
+        <li class="nav-item">
+            <button class="nav-link fw-bold" id="pending-tab" data-bs-toggle="tab" data-bs-target="#pending" type="button">⏳ طلبات جديدة</button>
+        </li>
+        <li class="nav-item">
+            <button class="nav-link fw-bold" id="slots-tab" data-bs-toggle="tab" data-bs-target="#slots" type="button">⚙️ إدارة المواعيد</button>
+        </li>
+        <li class="nav-item">
+            <button class="nav-link fw-bold" id="students-tab" data-bs-toggle="tab" data-bs-target="#students" type="button">🎓 الطلاب والدرجات</button>
+        </li>
+    </ul>
 
-    <hr class="my-5">
+    <div class="tab-content" id="myTabContent">
+        
+        <div class="tab-pane fade show active" id="confirmed">
+            <div class="card shadow border-success">
+                <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">✅ جدول الحصص والمواعيد المحجوزة</h5>
+                    <small>مرتبة حسب الأحدث</small>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-striped table-hover align-middle text-center">
+    <thead class="table-dark">
+        <tr>
+            <th>الطالب</th>
+            <th>المستوى الحالي</th>
+            <th>موعد الحصة</th>
+            <th>نوع الدرس</th>
+            <th>رابط الحصة</th>
+            <th>تحكم</th> </tr>
+    </thead>
+    <tbody>
+        {{ range .confirmed_bookings }}
+        <tr>
+            <td class="fw-bold">{{ .Student.FirstName }} {{ .Student.LastName }}</td>
+            
+            <td>
+                {{ if eq .Student.Level "new" }} <span class="badge bg-secondary level-badge">جديد</span>
+                {{ else if eq .Student.Level "level1" }} <span class="badge bg-info text-dark level-badge">مستوى 1</span>
+                {{ else if eq .Student.Level "level2" }} <span class="badge bg-primary level-badge">مستوى 2</span>
+                {{ else }} <span class="badge bg-light text-dark border">{{ .Student.Level }}</span> {{ end }}
+            </td>
 
-    <div class="card p-3 border-success">
-        <h5 class="text-success">📝 رصد درجة لطالب</h5>
-        <form action="/admin/add-grade" method="POST">
-            <div class="mb-2">
-                <label>اختر الطالب:</label>
-                <select name="student_id" class="form-select">
-                    {{ range .students }}
-                        <option value="{{ .ID }}">{{ .FirstName }} {{ .LastName }}</option>
-                    {{ end }}
-                </select>
-            </div>
-            <div class="row">
-                <div class="col"><input type="text" name="surah" class="form-control" placeholder="اسم السورة"></div>
-                <div class="col"><input type="text" name="verses" class="form-control" placeholder="الآيات (1-10)"></div>
-                <div class="col">
-                    <select name="grade" class="form-select">
-                        <option>ممتاز</option><option>جيد جداً</option><option>جيد</option><option>إعادة</option>
-                    </select>
+            <td class="dir-ltr">{{ .Slot.Day }} - {{ .Slot.Time }}</td>
+            
+            <td>
+                {{ if eq .Slot.Mode "group" }} <span class="badge bg-secondary">مجموعة</span>
+                {{ else if eq .Slot.Mode "private" }} <span class="badge bg-primary">خاص</span>
+                {{ else }} <span class="badge bg-danger">تحديد مستوى</span> {{ end }}
+            </td>
+
+            <td>
+                <a href="{{ .Slot.ZoomLink }}" target="_blank" class="btn btn-outline-success btn-sm zoom-btn">🎥 فتح</a>
+            </td>
+
+            <td>
+                <form action="/admin/delete-booking/{{ .ID }}" method="POST" onsubmit="return confirm('هل أنت متأكد من حذف هذا الموعد من السجل؟');">
+                    <button class="btn btn-danger btn-sm">🗑️ حذف</button>
+                </form>
+            </td>
+        </tr>
+        {{ else }}
+        <tr><td colspan="6" class="text-center text-muted py-4">لا توجد مواعيد حالياً</td></tr>
+        {{ end }}
+    </tbody>
+</table>
+                    </div>
                 </div>
             </div>
-            <textarea name="notes" class="form-control mt-2" placeholder="ملاحظات الشيخ..."></textarea>
-            <button class="btn btn-success mt-2 w-100">حفظ الدرجة</button>
-        </form>
-    </div>
-    <div class="card mb-4 p-3 bg-light">
-    <h5>📅 إضافة موعد جديد</h5>
-    <form action="/admin/add-slot" method="POST">
-        <div class="row">
-            <div class="col">
-                <select name="day" class="form-select">
-                    <option>السبت</option><option>الأحد</option><option>...</option>
-                </select>
-            </div>
-            <div class="col">
-                <input type="time" name="time" class="form-control" required>
-            </div>
-            <div class="col">
-                <select name="mode" class="form-select">
-                    <option value="private">درس خاص (Private)</option>
-                    <option value="group">مجموعة (Group)</option>
-                </select>
-            </div>
-            <div class="col">
-                <input type="text" name="zoom_link" class="form-control" placeholder="رابط الزوم لهذا الموعد" required>
-            </div>
-            <div class="col-auto">
-                <button class="btn btn-primary">إضافة</button>
+        </div>
+
+        <div class="tab-pane fade" id="pending">
+            <div class="card shadow border-warning">
+                <div class="card-header bg-warning text-dark">طلبات تحتاج مراجعة</div>
+                <div class="card-body">
+                    <table class="table table-hover align-middle">
+                        <thead><tr><th>الطالب</th><th>المستوى</th><th>نوع الطلب</th><th>المبلغ</th><th>الإيصال</th><th>الإجراء</th></tr></thead>
+                        <tbody>
+                            {{ range .bookings }}
+                            <tr>
+                                <td>{{ .Student.FirstName }} {{ .Student.LastName }}<br><small class="text-muted">{{ .Student.Phone }}</small></td>
+                                
+                                <td>
+                                    {{ if eq .Student.Level "new" }} <span class="badge bg-secondary">جديد</span>
+                                    {{ else if eq .Student.Level "level1" }} <span class="badge bg-info text-dark">مستوى 1</span>
+                                    {{ else if eq .Student.Level "level2" }} <span class="badge bg-primary">مستوى 2</span>
+                                    {{ else }} {{ .Student.Level }} {{ end }}
+                                </td>
+
+                                <td>{{ .BookingType }}</td>
+                                <td class="fw-bold text-success">{{ .Amount }}</td>
+                                <td><a href="/uploads/{{ .PaymentImage }}" target="_blank" class="btn btn-sm btn-outline-dark">عرض</a></td>
+                                <td>
+                                    <form action="/admin/approve/{{ .ID }}" method="POST" class="d-inline">
+                                        <button class="btn btn-success btn-sm">قبول</button>
+                                    </form>
+                                    <button class="btn btn-danger btn-sm" onclick="showRejectModal('{{.ID}}')">رفض</button>
+                                </td>
+                            </tr>
+                            {{ else }}
+                            <tr><td colspan="6" class="text-center text-muted">لا توجد طلبات جديدة</td></tr>
+                            {{ end }}
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
-    </form>
-</div>
 
-<div class="card mb-4 p-3 border-info">
-    <h5>🎓 تحديد مستوى الطالب (بعد الاختبار)</h5>
-    <form action="/admin/update-level" method="POST" class="d-flex gap-2">
-        <select name="student_id" class="form-select">
-            {{ range .students }}
-                <option value="{{ .ID }}">{{ .FirstName }} {{ .LastName }} ({{ .Level }})</option>
-            {{ end }}
-        </select>
-        <select name="level" class="form-select">
-            <option value="level1">المستوى الأول (جزء عم)</option>
-            <option value="level2">المستوى الثاني (جزء تبارك)</option>
-            <option value="advanced">مستوى متقدم</option>
-        </select>
-        <button class="btn btn-info text-white">تحديث المستوى</button>
-    </form>
-</div>
-<div class="card mb-4 p-3 bg-light">
-    <h5>📅 إضافة موعد جديد</h5>
-    <form action="/admin/add-slot" method="POST">
-        <div class="row">
+        <div class="tab-pane fade" id="slots">
+    
+    <div class="card shadow p-4 mb-4">
+        <h5 class="text-primary">➕ إضافة موعد جديد للجدول</h5>
+        <form action="/admin/add-slot" method="POST" class="row g-3">
             <div class="col-md-2">
                 <select name="day" class="form-select">
                     <option>السبت</option><option>الأحد</option><option>الاثنين</option>
                     <option>الثلاثاء</option><option>الأربعاء</option><option>الخميس</option><option>الجمعة</option>
                 </select>
             </div>
-            <div class="col-md-2">
-                <input type="time" name="time" class="form-control" required>
-            </div>
+            <div class="col-md-2"><input type="time" name="time" class="form-control" required></div>
             <div class="col-md-3">
                 <select name="mode" class="form-select">
-                    <option value="private">درس خاص (Private)</option>
+                    <option value="private">خاص (Private)</option>
                     <option value="group">مجموعة (Group)</option>
-                    <option value="assessment" class="text-danger fw-bold">🔵 تحديد مستوى (Assessment)</option>
+                    <option value="assessment">تحديد مستوى</option>
                 </select>
             </div>
-            <div class="col-md-3">
-                <input type="text" name="zoom_link" class="form-control" placeholder="رابط الزوم لهذا الموعد" required>
-            </div>
-            <div class="col-md-2">
-                <button class="btn btn-primary w-100">إضافة</button>
-            </div>
-        </div>
-    </form>
+            <div class="col-md-3"><input type="text" name="zoom_link" class="form-control" placeholder="رابط الزوم/الواتساب" required></div>
+            <div class="col-md-2"><button class="btn btn-primary w-100">إضافة</button></div>
+        </form>
+    </div>
+
+    <div class="card shadow border-info">
+    <div class="card-header bg-info text-white">
+        <h5 class="mb-0">📋 المواعيد المتاحة حالياً</h5>
+    </div>
+    <div class="card-body">
+        <table class="table table-striped table-hover text-center align-middle">
+            <thead class="table-light">
+                <tr>
+                    <th>اليوم</th>
+                    <th>الساعة</th>
+                    <th>النوع</th>
+                    <th>الرابط</th>
+                    <th>إجراء</th>
+                </tr>
+            </thead>
+            <tbody>
+                {{ range .slots }}
+                <tr>
+                    <td>{{ .Day }}</td>
+                    <td class="dir-ltr">{{ .Time }}</td>
+                    <td>
+                        {{ if eq .Mode "assessment" }} <span class="badge bg-danger">تحديد مستوى</span>
+                        {{ else if eq .Mode "group" }} <span class="badge bg-secondary">مجموعة</span>
+                        {{ else }} <span class="badge bg-primary">خاص</span> {{ end }}
+                    </td>
+                    <td><small class="text-muted">{{ .ZoomLink }}</small></td>
+                    <td>
+                        <div class="d-flex justify-content-center gap-2">
+                            <button class="btn btn-outline-primary btn-sm" 
+                                onclick="openEditModal('{{.ID}}', '{{.Day}}', '{{.Time}}', '{{.Mode}}', '{{.ZoomLink}}')">
+                                ✏️ تعديل
+                            </button>
+
+                            <form action="/admin/delete-slot/{{ .ID }}" method="POST" onsubmit="return confirm('حذف نهائي؟');">
+                                <button class="btn btn-outline-danger btn-sm">🗑️</button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+                {{ else }}
+                <tr><td colspan="5" class="text-muted py-3">لا توجد مواعيد متاحة.</td></tr>
+                {{ end }}
+            </tbody>
+        </table>
+    </div>
+</div>
 </div>
 
+        <div class="tab-pane fade" id="students">
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="card shadow p-3 mb-3">
+                        <h5 class="text-info">ترقية مستوى الطالب</h5>
+                        <form action="/admin/update-level" method="POST" class="d-flex gap-2">
+                            <select name="student_id" class="form-select">
+                                {{ range .students }}
+                                    <option value="{{ .ID }}">{{ .FirstName }} {{ .LastName }} ({{ .Level }})</option>
+                                {{ end }}
+                            </select>
+                            <select name="level" class="form-select">
+                                <option value="level1">المستوى الأول (عم)</option>
+                                <option value="level2">المستوى الثاني (تبارك)</option>
+                                <option value="advanced">متقدم</option>
+                            </select>
+                            <button class="btn btn-info text-white">تحديث</button>
+                        </form>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card shadow p-3 border-success">
+                        <h5 class="text-success">رصد درجة جديدة</h5>
+                        <form action="/admin/add-grade" method="POST">
+                            <select name="student_id" class="form-select mb-2">
+                                {{ range .students }}
+                                    <option value="{{ .ID }}">{{ .FirstName }} {{ .LastName }}</option>
+                                {{ end }}
+                            </select>
+                            <div class="row g-2 mb-2">
+                                <div class="col"><input type="text" name="surah" class="form-control" placeholder="السورة"></div>
+                                <div class="col"><input type="text" name="verses" class="form-control" placeholder="الآيات"></div>
+                                <div class="col">
+                                    <select name="grade" class="form-select"><option>ممتاز</option><option>جيد</option></select>
+                                </div>
+                            </div>
+                            <textarea name="notes" class="form-control mb-2" placeholder="ملاحظات"></textarea>
+                            <button class="btn btn-success w-100">حفظ</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
+
+<div class="modal fade" id="rejectModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form id="rejectForm" method="POST">
+                <div class="modal-header"><h5 class="modal-title">سبب الرفض</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+                <div class="modal-body">
+                    <p class="text-danger">سيتم حذف الطلب وإشعار الطالب.</p>
+                    <textarea name="reason" class="form-control" placeholder="السبب..." required></textarea>
+                </div>
+                <div class="modal-footer"><button type="submit" class="btn btn-danger">تأكيد الرفض</button></div>
+            </form>
+        </div>
+    </div>
 </div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    function showRejectModal(id) {
+        document.getElementById('rejectForm').action = '/admin/reject/' + id;
+        new bootstrap.Modal(document.getElementById('rejectModal')).show();
+    }
+</script>
+<div class="modal fade" id="editSlotModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title">تعديل بيانات الموعد</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="editSlotForm" method="POST">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label>اليوم</label>
+                        <select name="day" id="editDay" class="form-select">
+                            <option>السبت</option><option>الأحد</option><option>الاثنين</option>
+                            <option>الثلاثاء</option><option>الأربعاء</option><option>الخميس</option><option>الجمعة</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label>الساعة</label>
+                        <input type="time" name="time" id="editTime" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label>النوع</label>
+                        <select name="mode" id="editMode" class="form-select">
+                            <option value="private">خاص (Private)</option>
+                            <option value="group">مجموعة (Group)</option>
+                            <option value="assessment">تحديد مستوى</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label>رابط الزوم</label>
+                        <input type="text" name="zoom_link" id="editZoom" class="form-control" required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                    <button type="submit" class="btn btn-primary">حفظ التغييرات</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    // دالة لفتح المودل وتعبئة البيانات تلقائياً
+    function openEditModal(id, day, time, mode, zoom) {
+        // تعبئة الفورم بالبيانات القديمة
+        document.getElementById('editDay').value = day;
+        document.getElementById('editTime').value = time;
+        document.getElementById('editMode').value = mode;
+        document.getElementById('editZoom').value = zoom;
+        
+        // تحديث رابط الفورم ليحتوي على ID الموعد
+        document.getElementById('editSlotForm').action = "/admin/update-slot/" + id;
+        
+        // إظهار النافذة
+        new bootstrap.Modal(document.getElementById('editSlotModal')).show();
+    }
+</script>
+<script>
+    document.addEventListener("DOMContentLoaded", function(){
+        // 1. استرجاع التبويب المحفوظ من الذاكرة
+        var activeTab = localStorage.getItem('activeTab');
+        
+        if (activeTab) {
+            // إذا وجدنا تبويباً محفوظاً، نقوم بفتحه
+            var tabTrigger = document.querySelector('#' + activeTab);
+            if (tabTrigger) {
+                var tab = new bootstrap.Tab(tabTrigger);
+                tab.show();
+            }
+        }
+
+        // 2. حفظ التبويب الجديد عند الضغط عليه
+        var tabEl = document.querySelectorAll('button[data-bs-toggle="tab"]');
+        tabEl.forEach(function(el) {
+            el.addEventListener('shown.bs.tab', function (event) {
+                // event.target.id هو معرف الزر (مثلاً: pending-tab)
+                localStorage.setItem('activeTab', event.target.id);
+            });
+        });
+    });
+</script>
 </body>
 </html>

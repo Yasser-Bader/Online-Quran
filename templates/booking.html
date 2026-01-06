@@ -1,515 +1,225 @@
-<!--<!DOCTYPE html>
-<html lang="ar" dir="rtl">
-<head>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <title>إتمام الحجز</title>
-</head>
-<body class="bg-light p-5">
-<div class="container bg-white p-4 rounded shadow" style="max-width: 500px;">
-    <h3 class="text-center mb-4">تأكيد الحجز والدفع</h3>
-    
-    {{ if .message }} <div class="alert alert-success">{{ .message }}</div> {{ end }}
-    {{ if .error }} <div class="alert alert-danger">{{ .error }}</div> {{ end }}
-
-    <p>الرجاء تحويل المبلغ ثم رفع صورة التحويل.</p>
-    
-    <form action="/booking/upload" method="POST" enctype="multipart/form-data">
-        <input type="hidden" name="student_id" value="{{ .student_id }}">
-        
-        <div class="mb-3">
-            <label class="form-label">صورة الإيصال (Screenshot)</label>
-            <input type="file" name="receipt" class="form-control" required accept="image/*">
-        </div>
-
-        <button type="submit" class="btn btn-success w-100">إرسال للتأكيد</button>
-    </form>
-    
-    <form action="/booking/upload" method="POST" enctype="multipart/form-data">
-    <input type="hidden" name="student_id" value="{{ .student_id }}">
-    
-    <div class="mb-3">
-        <label class="form-label">اختر موعد الحصة</label>
-        <select name="slot_id" class="form-select" required>
-            <option value="" disabled selected>-- اختر الموعد المناسب --</option>
-            {{ range .slots }}
-                <option value="{{ .ID }}">{{ .Day }} - الساعة {{ .Time }}</option>
-            {{ end }}
-        </select>
-    </div>
-
-    <div class="mb-3">
-        <label class="form-label">صورة الإيصال</label>
-        <input type="file" name="receipt" class="form-control" required>
-    </div>
-
-    <button type="submit" class="btn btn-success w-100">حجز وإرسال</button>
-</form>
-</div>
-</body>
-</html>
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
+    <title>الحجز والاشتراك - آفاق</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>إتمام الحجز والدفع</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
-        body { background-color: #f8f9fa; font-family: Tahoma, sans-serif; }
-        .booking-card { max-width: 600px; margin: 40px auto; background: white; padding: 30px; border-radius: 15px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
-        .price-option { border: 2px solid #dee2e6; border-radius: 10px; padding: 15px; margin-bottom: 10px; cursor: pointer; transition: 0.3s; }
-        .price-option:hover { border-color: #198754; background-color: #f8fffb; }
-        .price-option input { margin-left: 10px; }
-    </style>
-</head>
-<body>
-
-<div class="container">
-    <div class="booking-card">
-        <h3 class="text-center mb-4 text-primary">تأكيد الحجز</h3>
-
-        {{ if .message }} <div class="alert alert-success">{{ .message }}</div> {{ end }}
+        :root { --primary: #0E2A47; --gold: #C5A059; --bg: #f4f6f9; }
+        body { background-color: var(--bg); font-family: 'Cairo', sans-serif; padding-top: 30px; }
         
-        <form action="/booking/upload" method="POST" enctype="multipart/form-data">
-            <input type="hidden" name="student_id" value="{{ .student.ID }}">
-            
-            <input type="hidden" id="amount_input" name="amount" value="">
-
-            {{ if eq .student.Level "new" }}
-                <div class="alert alert-info">
-                    👋 أهلاً بك يا <strong>{{ .student.FirstName }}</strong><br>
-                    بما أنك طالب جديد، الخطوة الأولى هي حجز موعد <strong>تحديد مستوى</strong> مع الشيخ.
-                </div>
-                
-                <h5 class="mb-3">اختر الباقة المطلوبة:</h5>
-                <label class="price-option d-block w-100">
-                    <input type="radio" name="booking_type" value="assessment" checked onclick="setPrice(50)">
-                    <strong>حصة تحديد مستوى</strong>
-                    <span class="float-end text-success fw-bold">50 جنيه</span>
-                </label>
-
-            {{ else if eq .student.Level "level1" }}
-                <div class="alert alert-success">
-                    أنت الآن في <strong>المستوى التمهيدي (جزء عم)</strong> ✅
-                </div>
-
-                <h5 class="mb-3">اختر نظام الدفع المناسب لك:</h5>
-                <label class="price-option d-block w-100">
-                    <input type="radio" name="booking_type" value="monthly_l1" onclick="setPrice(300)">
-                    <strong>اشتراك شهري (8 حصص)</strong>
-                    <span class="badge bg-warning text-dark mx-2">أوفر</span>
-                    <span class="float-end text-success fw-bold">300 جنيه</span>
-                </label>
-
-                <label class="price-option d-block w-100">
-                    <input type="radio" name="booking_type" value="session_l1" onclick="setPrice(50)">
-                    <strong>دفع بالحصة (تجديد)</strong>
-                    <span class="float-end text-success fw-bold">50 جنيه</span>
-                </label>
-
-            {{ else }}
-                <div class="alert alert-warning">يرجى التواصل مع الإدارة لتحديد المستوى.</div>
-            {{ end }}
-
-            <hr>
-
-            <div class="mb-3 mt-4">
-                <label class="form-label fw-bold">📅 اختر الموعد المناسب</label>
-                <select name="slot_id" class="form-select" required>
-                    <option value="" disabled selected>-- المواعيد المتاحة للشيخ --</option>
-                    {{ range .slots }}
-                        <option value="{{ .ID }}">{{ .Day }} - الساعة {{ .Time }}</option>
-                    {{ end }}
-                </select>
-            </div>
-
-            <div class="mb-3">
-                <label class="form-label fw-bold">📸 صورة إيصال التحويل</label>
-                <input type="file" name="receipt" class="form-control" required accept="image/*">
-                <div class="form-text">الرجاء تحويل المبلغ الظاهر أعلاه ثم رفع الصورة.</div>
-            </div>
-
-            <button type="submit" class="btn btn-primary w-100 btn-lg">تأكيد الحجز</button>
-        </form>
-    </div>
-</div>
-
-<script>
-    // دالة صغيرة لتحديث السعر عند اختيار الباقة
-    function setPrice(price) {
-        document.getElementById('amount_input').value = price;
-    }
-    // تشغيل الدالة تلقائياً لأول خيار مختار عند تحميل الصفحة
-    window.onload = function() {
-        const checkedRadio = document.querySelector('input[name="booking_type"]:checked');
-        if(checkedRadio) {
-            checkedRadio.onclick();
+        .main-card {
+            max-width: 750px; margin: 0 auto; background: white;
+            border-radius: 15px; box-shadow: 0 5px 25px rgba(0,0,0,0.05);
+            border-top: 5px solid var(--primary);
         }
-    }
-</script>
-
-</body>
-</html>
-
-<!DOCTYPE html>
-<html lang="ar" dir="rtl">
-<head>
-    <meta charset="UTF-8">
-    <title>تجديد الاشتراك</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <style>
-        .option-card { border: 2px solid #ddd; padding: 15px; border-radius: 10px; cursor: pointer; transition: 0.3s; }
-        .option-card:hover { background-color: #f8f9fa; border-color: #0d6efd; }
-        .option-card input { display: none; } /* نخفي الراديو ونعتمد على شكل الكارد */
-        .option-card.selected { background-color: #e7f1ff; border-color: #0d6efd; }
-    </style>
-</head>
-<body>
-
-<div class="container py-5">
-    <div class="card shadow p-4" style="max-width: 600px; margin: auto;">
-        <h3 class="text-center text-primary mb-3">تجديد الاشتراك</h3>
-
-        <div class="alert alert-success text-center">
-            أهلاً بك {{ .student.FirstName }}، أنت حالياً في: <strong>
-            {{ if eq .student.Level "level1" }} المستوى الأول 
-            {{ else if eq .student.Level "level2" }} المستوى الثاني 
-            {{ else }} المستوى العام {{ end }}
-            </strong>
-        </div>
-
-        <form action="/booking/upload" method="POST" enctype="multipart/form-data">
-            <input type="hidden" name="student_id" value="{{ .student.ID }}">
-            <input type="hidden" name="amount" id="final_amount" value="0">
-            <input type="hidden" name="booking_type" id="booking_type_input" value="">
-
-            <h5 class="mb-3">1. كيف تفضل أن تدرس؟</h5>
-            <div class="row g-2 mb-4">
-                <div class="col-6">
-                    <label class="option-card w-100 text-center" id="btn-group">
-                        <input type="radio" name="mode" value="group" onclick="updateConfig('group')">
-                        <strong>👥 مجموعة</strong><br>
-                        <small class="text-muted">تفاعلي وارخص</small>
-                    </label>
-                </div>
-                <div class="col-6">
-                    <label class="option-card w-100 text-center" id="btn-private">
-                        <input type="radio" name="mode" value="private" onclick="updateConfig('private')">
-                        <strong>👤 خاص (VIP)</strong><br>
-                        <small class="text-muted">تركيز كامل لك</small>
-                    </label>
-                </div>
-            </div>
-
-            <div id="payment-section" style="display:none;">
-                <h5 class="mb-3">2. اختر خطة الدفع:</h5>
-                <div class="list-group mb-4">
-                    <label class="list-group-item d-flex justify-content-between align-items-center">
-                        <div>
-                            <input class="form-check-input me-1" type="radio" name="plan" value="monthly" onclick="calculatePrice('monthly')" checked>
-                            اشتراك شهري (8 حصص)
-                        </div>
-                        <span class="badge bg-primary rounded-pill" id="price-monthly">---</span>
-                    </label>
-                    <label class="list-group-item d-flex justify-content-between align-items-center">
-                        <div>
-                            <input class="form-check-input me-1" type="radio" name="plan" value="session" onclick="calculatePrice('session')">
-                            دفع بالحصة الواحدة
-                        </div>
-                        <span class="badge bg-secondary rounded-pill" id="price-session">---</span>
-                    </label>
-                </div>
-            </div>
-
-            <div id="slots-section" style="display:none;">
-                <h5 class="mb-3">3. المواعيد المتاحة (<span id="slot-mode-text"></span>):</h5>
-                <select name="slot_id" class="form-select mb-3" required>
-                    <option value="" disabled selected>-- اختر الموعد --</option>
-                    {{ range .slots }}
-                        <option value="{{ .ID }}" data-mode="{{ .Mode }}" class="slot-option">
-                            {{ .Day }} - الساعة {{ .Time }}
-                        </option>
-                    {{ end }}
-                </select>
-            </div>
-
-            <div id="upload-section" style="display:none;">
-                <div class="alert alert-warning text-center">
-                    المبلغ المطلوب: <strong id="display-total" style="font-size: 1.2em;">0</strong> جنيه
-                </div>
-                <div class="mb-3">
-                    <label>صورة التحويل:</label>
-                    <input type="file" name="receipt" class="form-control" required>
-                </div>
-                <button class="btn btn-success w-100 btn-lg">تأكيد الحجز</button>
-            </div>
-        </form>
-    </div>
-</div>
-
-<script>
-    // === إعدادات الأسعار (يمكنك تعديلها هنا بسهولة) ===
-    const prices = {
-        group: { monthly: 200, session: 30 },   // أسعار المجموعات
-        private: { monthly: 400, session: 60 }  // أسعار الخاص
-    };
-
-    let currentMode = ""; // group or private
-
-    function updateConfig(mode) {
-        currentMode = mode;
         
-        // 1. تلوين الكارت المختار
-        document.querySelectorAll('.option-card').forEach(el => el.classList.remove('selected'));
-        document.getElementById('btn-' + mode).classList.add('selected');
-
-        // 2. تحديث الأسعار الظاهرة في القائمة
-        document.getElementById('price-monthly').innerText = prices[mode].monthly + " جنيه";
-        document.getElementById('price-session').innerText = prices[mode].session + " جنيه";
-
-        // 3. فلترة المواعيد (أهم خطوة)
-        const options = document.querySelectorAll('.slot-option');
-        let hasSlots = false;
-        options.forEach(opt => {
-            if (opt.dataset.mode === mode) {
-                opt.style.display = 'block'; // اظهر الموعد المناسب
-                hasSlots = true;
-            } else {
-                opt.style.display = 'none'; // اخفِ الموعد غير المناسب
-            }
-        });
-
-        // إعادة تعيين القائمة
-        document.querySelector('select[name="slot_id"]').value = "";
-        document.getElementById('slot-mode-text').innerText = (mode === 'group' ? "مجموعات" : "درس خاص");
-
-        // 4. إظهار باقي الأقسام
-        document.getElementById('payment-section').style.display = 'block';
-        document.getElementById('slots-section').style.display = 'block';
-        document.getElementById('upload-section').style.display = 'block';
-
-        // حساب السعر الافتراضي (الشهري)
-        document.querySelector('input[name="plan"][value="monthly"]').checked = true;
-        calculatePrice('monthly');
-    }
-
-    function calculatePrice(plan) {
-        if (!currentMode) return;
-
-        const price = prices[currentMode][plan];
-        
-        // تحديث السعر الظاهر والقيمة المخفية
-        document.getElementById('display-total').innerText = price;
-        document.getElementById('final_amount').value = price;
-        
-        // تحديث نوع الحجز المرسل للسيرفر
-        // سيرسل مثلاً: group_monthly أو private_session
-        document.getElementById('booking_type_input').value = currentMode + "_" + plan;
-    }
-</script>
-
-</body>
-</html>
--->
-!DOCTYPE html>
-<html lang="ar" dir="rtl">
-<head>
-    <meta charset="UTF-8">
-    <title>الحجز والاشتراك</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <style>
-        .option-card { border: 2px solid #ddd; padding: 15px; border-radius: 10px; cursor: pointer; transition: 0.3s; }
-        .option-card:hover { background-color: #f8f9fa; border-color: #0d6efd; }
-        .option-card.selected { background-color: #e7f1ff; border-color: #0d6efd; border-width: 3px; }
+        /* تصميم بطاقات الاختيار (مجموعة/خاص) */
+        .option-card {
+            border: 2px solid #eee; padding: 20px; border-radius: 12px;
+            cursor: pointer; transition: 0.3s; background: #fff; height: 100%;
+        }
+        .option-card:hover { border-color: var(--gold); transform: translateY(-3px); }
+        .option-card.selected {
+            background-color: #fffcf2; /* خلفية ذهبية فاتحة جداً */
+            border-color: var(--gold); border-width: 2px;
+            box-shadow: 0 5px 15px rgba(197, 160, 89, 0.2);
+        }
         .option-card input { display: none; }
-        .price-badge { font-size: 1.1em; font-weight: bold; }
+        .option-card h4 { color: var(--primary); font-weight: 700; margin-bottom: 10px; }
+        .text-success { color: #198754 !important; font-weight: bold; font-size: 1.1em; }
+        
+        .btn-primary { background-color: var(--primary); border: none; }
+        .btn-success { background-color: var(--gold); border: none; font-weight: bold; }
+        .btn-success:hover { background-color: #b08d48; }
+
+        .form-control, .form-select { border-radius: 10px; padding: 12px; }
+        .form-control:focus, .form-select:focus { border-color: var(--gold); box-shadow: 0 0 0 0.25rem rgba(197, 160, 89, 0.25); }
     </style>
 </head>
 <body>
 
-<div class="container py-5">
-    <div class="card shadow p-4 mx-auto" style="max-width: 700px;">
+<div class="container py-4">
+    <div class="main-card card p-4 mx-auto">
+        <div class="text-center mb-3">
+            <img src="images/logo1.png" width="70" alt="Logo">
+        </div>
         
-        {{ if eq .student.Level "new" }}
-            <h3 class="text-center text-primary mb-3">حجز موعد تحديد مستوى</h3>
-            <div class="alert alert-info">
-                أهلاً بك يا <strong>{{ .student.FirstName }}</strong>.<br>
-                قبل الاشتراك في الباقات، يجب حجز موعد <strong>تحديد مستوى</strong> ليتمكن الشيخ من وضعك في المستوى المناسب.
-                <br><br>
-                <small class="text-muted">⚠️ ملاحظة: إذا كنت قد أجريت الاختبار بالفعل، يرجى الانتظار حتى يقوم الشيخ بتحديث مستواك.</small>
-            </div>
-
-            <form action="/booking/upload" method="POST" enctype="multipart/form-data">
-                <input type="hidden" name="student_id" value="{{ .student.ID }}">
-                <input type="hidden" name="booking_type" value="assessment">
-                <input type="hidden" name="amount" value="50"> <h5 class="mb-3">اختر موعد الاختبار (50 جنيه):</h5>
-                <select name="slot_id" class="form-select mb-4" required>
-                    <option value="" disabled selected>-- المواعيد المتاحة للاختبار --</option>
-                    {{ range .slots }}
-                        {{ if eq .Mode "assessment" }}
-                            <option value="{{ .ID }}">{{ .Day }} - الساعة {{ .Time }}</option>
-                        {{ end }}
-                    {{ end }}
-                </select>
-
-                <div class="mb-3">
-                    <label>صورة التحويل:</label>
-                    <input type="file" name="receipt" class="form-control" required>
+        {{ if .error }} <div class="alert alert-danger text-center">{{ .error }}</div> {{ end }}
+        
+        {{ if .success_message }}
+            <div class="text-center py-5">
+                <div class="mb-3 display-1">✅</div>
+                <h2 class="text-success fw-bold">تم إرسال الطلب!</h2>
+                <h4 class="text-primary mt-3">{{ .student.FirstName }}</h4> 
+                <p class="lead text-muted">{{ .success_message }}</p>
+                <div class="alert alert-light border mt-4">
+                    يرجى التحقق من بريدك الإلكتروني قريباً لتأكيد الموعد.
                 </div>
-                <button class="btn btn-primary w-100">حجز الاختبار</button>
-            </form>
-
+                <a href="/" class="btn btn-outline-primary mt-3">العودة للرئيسية</a>
+            </div>
         {{ else }}
-            <h3 class="text-center text-success mb-3">تجديد الاشتراك</h3>
-            
-            <div class="alert alert-success text-center">
-                مستواك الحالي: 
-                <strong>
-                {{ if eq .student.Level "level1" }} المستوى الأول (جزء عم) 
-                {{ else if eq .student.Level "level2" }} المستوى الثاني (تبارك)
-                {{ else }} مستوى متقدم {{ end }}
-                </strong>
-            </div>
-
-            <form action="/booking/upload" method="POST" enctype="multipart/form-data">
-                <input type="hidden" name="student_id" value="{{ .student.ID }}">
-                <input type="hidden" name="amount" id="final_amount" value="0">
-                <input type="hidden" name="booking_type" id="booking_type_input" value="">
-
-                <h5 class="mb-3">1. اختر نوع الدرس:</h5>
-                <div class="row g-2 mb-4">
-                    <div class="col-6">
-                        <label class="option-card w-100 text-center" id="btn-group">
-                            <input type="radio" name="mode" value="group" onclick="updateUI('group')">
-                            <h4>👥 مجموعة</h4>
-                            <div class="text-success" id="display-price-group">...</div>
-                        </label>
-                    </div>
-                    <div class="col-6">
-                        <label class="option-card w-100 text-center" id="btn-private">
-                            <input type="radio" name="mode" value="private" onclick="updateUI('private')">
-                            <h4>👤 خاص (VIP)</h4>
-                            <div class="text-success" id="display-price-private">...</div>
-                        </label>
-                    </div>
-                </div>
-
-                <div id="details-section" style="display:none;">
-                    
-                    <h5 class="mb-3">2. اختر الموعد المناسب (<span id="mode-label"></span>):</h5>
-                    <select name="slot_id" class="form-select mb-3" required>
-                        <option value="" disabled selected>-- اختر الموعد --</option>
-                        {{ range .slots }}
-                            <option value="{{ .ID }}" data-mode="{{ .Mode }}" class="slot-item">
-                                {{ .Day }} - الساعة {{ .Time }}
-                            </option>
-                        {{ end }}
-                    </select>
-
-                    <h5 class="mb-3">3. نظام الدفع:</h5>
-                    <div class="list-group mb-4">
-                         <label class="list-group-item">
-                            <input class="form-check-input me-1" type="radio" name="plan" value="monthly" checked onclick="calculateTotal()">
-                            اشتراك شهري (8 حصص)
-                        </label>
-                        <label class="list-group-item">
-                            <input class="form-check-input me-1" type="radio" name="plan" value="session" onclick="calculateTotal()">
-                            دفع بالحصة الواحدة
-                        </label>
+        
+            {{ if .student.ID }}
+                {{ if eq .student.Level "new" }}
+                    <h3 class="text-center mb-4" style="color: var(--primary);">حجز موعد تحديد مستوى</h3>
+                    <div class="alert alert-info text-center">
+                        أهلاً بك يا <strong>{{ .student.FirstName }}</strong> 👋<br>
+                        لبدء رحلتك معنا، يرجى حجز موعد لاختبار تحديد المستوى.
                     </div>
 
-                    <div class="alert alert-warning text-center">
-                        الإجمالي المطلوب: <strong id="total-display" style="font-size:1.3em">0</strong> جنيه
+                    <form action="/booking/upload" method="POST" enctype="multipart/form-data">
+                        <input type="hidden" name="student_id" value="{{ .student.ID }}">
+                        <input type="hidden" name="booking_type" value="assessment">
+                        <input type="hidden" name="amount" value="50">
+
+                        <h5 class="mb-3 fw-bold text-muted">اختر موعد الاختبار (50 جنيه):</h5>
+                        <select name="slot_id" class="form-select mb-4" required>
+                            <option value="" disabled selected>-- المواعيد المتاحة للاختبار --</option>
+                            {{ range .slots }}
+                                <option value="{{ .ID }}">{{ .Day }} - الساعة {{ .Time }}</option>
+                            {{ end }}
+                        </select>
+
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">صورة التحويل البنكي:</label>
+                            <input type="file" name="receipt" class="form-control" required>
+                        </div>
+                        <button class="btn btn-primary w-100 btn-lg shadow">تأكيد وحجز الاختبار</button>
+                    </form>
+
+                {{ else }}
+                    <h3 class="text-center mb-2" style="color: var(--primary);">تجديد الاشتراك</h3>
+                    <div class="text-center mb-4 text-muted">أهلاً بعودتك يا <span class="fw-bold">{{ .student.FirstName }}</span></div>
+
+                    <div class="alert alert-light border text-center mb-4" style="border-right: 5px solid var(--gold) !important;">
+                        مستواك الحالي: 
+                        <strong style="color: var(--primary);">
+                        {{ if eq .student.Level "level1" }} المستوى الأول (جزء عم) 
+                        {{ else if eq .student.Level "level2" }} المستوى الثاني (تبارك)
+                        {{ else }} مستوى متقدم {{ end }}
+                        </strong>
                     </div>
 
-                    <div class="mb-3">
-                        <label>صورة التحويل:</label>
-                        <input type="file" name="receipt" class="form-control" required>
-                    </div>
+                    <form action="/booking/upload" method="POST" enctype="multipart/form-data">
+                        <input type="hidden" name="student_id" value="{{ .student.ID }}">
+                        <input type="hidden" name="amount" id="final_amount" value="0">
+                        <input type="hidden" name="booking_type" id="booking_type_input" value="">
 
-                    <button class="btn btn-success w-100 btn-lg">تأكيد الحجز والدفع</button>
-                </div>
-            </form>
+                        <h5 class="mb-3 fw-bold" style="color: var(--primary);">1. اختر نوع الدرس:</h5>
+                        <div class="row g-3 mb-4">
+                            <div class="col-6">
+                                <label class="option-card w-100 text-center d-block" id="btn-group">
+                                    <input type="radio" name="mode" value="group" onclick="updateUI('group')">
+                                    <div class="fs-1 mb-2">👥</div>
+                                    <h4>مجموعة</h4>
+                                    <div class="text-success" id="display-price-group">...</div>
+                                </label>
+                            </div>
+                            <div class="col-6">
+                                <label class="option-card w-100 text-center d-block" id="btn-private">
+                                    <input type="radio" name="mode" value="private" onclick="updateUI('private')">
+                                    <div class="fs-1 mb-2">👤</div>
+                                    <h4>خاص (VIP)</h4>
+                                    <div class="text-success" id="display-price-private">...</div>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div id="details-section" style="display:none; animation: fadeIn 0.5s;">
+                            <h5 class="mb-3 fw-bold" style="color: var(--primary);">2. اختر الموعد المناسب (<span id="mode-label"></span>):</h5>
+                            <select name="slot_id" class="form-select mb-4" required>
+                                <option value="" disabled selected>-- اختر الموعد --</option>
+                                {{ range .slots }}
+                                    <option value="{{ .ID }}" data-mode="{{ .Mode }}" class="slot-item">
+                                        {{ .Day }} - الساعة {{ .Time }}
+                                    </option>
+                                {{ end }}
+                            </select>
+
+                            <h5 class="mb-3 fw-bold" style="color: var(--primary);">3. نظام الدفع:</h5>
+                            <div class="list-group mb-4 shadow-sm">
+                                <label class="list-group-item list-group-item-action">
+                                    <input class="form-check-input me-2" type="radio" name="plan" value="monthly" checked onclick="calculateTotal()">
+                                    اشتراك شهري (8 حصص)
+                                </label>
+                                <label class="list-group-item list-group-item-action">
+                                    <input class="form-check-input me-2" type="radio" name="plan" value="session" onclick="calculateTotal()">
+                                    دفع بالحصة الواحدة
+                                </label>
+                            </div>
+
+                            <div class="card bg-light border-0 mb-4 p-3 text-center">
+                                <h5 class="mb-0 text-muted">الإجمالي المطلوب</h5>
+                                <div class="display-6 fw-bold text-success"><span id="total-display">0</span> جنيه</div>
+                            </div>
+
+                            <div class="mb-4">
+                                <label class="form-label fw-bold">صورة إيصال التحويل:</label>
+                                <input type="file" name="receipt" class="form-control" required>
+                            </div>
+
+                            <button class="btn btn-success w-100 btn-lg shadow">تأكيد الحجز والدفع</button>
+                        </div>
+                    </form>
+                {{ end }}
+            {{ else }}
+                <div class="alert alert-danger">لا توجد بيانات للطالب.</div>
+            {{ end }}
         {{ end }}
     </div>
 </div>
 
 <script>
-    // 1. تعريف الأسعار لكل مستوى (يمكنك تعديلها هنا)
+    // الحفاظ على كود التسعير كما هو لضمان عمل الـ Backend
     const pricing = {
-        "level1": { // أسعار المستوى الأول
-            "group": { monthly: 200, session: 30 },
-            "private": { monthly: 400, session: 60 }
-        },
-        "level2": { // أسعار المستوى الثاني (أغلى مثلاً)
-            "group": { monthly: 250, session: 40 },
-            "private": { monthly: 500, session: 70 }
-        },
-        "advanced": { // المتقدم
-            "group": { monthly: 300, session: 50 },
-            "private": { monthly: 600, session: 80 }
-        }
+        "level1": { "group": { monthly: 200, session: 30 }, "private": { monthly: 400, session: 60 } },
+        "level2": { "group": { monthly: 250, session: 40 }, "private": { monthly: 500, session: 70 } },
+        "advanced": { "group": { monthly: 300, session: 50 }, "private": { monthly: 600, session: 80 } }
     };
 
-    // جلب مستوى الطالب الحالي من السيرفر (Go Template)
-    // نضع قيمة افتراضية level1 لو حصل خطأ
     const userLevel = "{{ .student.Level }}" || "level1"; 
-    
-    let selectedMode = ""; // group or private
+    let selectedMode = "";
 
-    // عند تحميل الصفحة، نعرض الأسعار الأولية في الكروت
     window.onload = function() {
         if (pricing[userLevel]) {
-            document.getElementById('display-price-group').innerText = "الشهر: " + pricing[userLevel].group.monthly + "ج";
-            document.getElementById('display-price-private').innerText = "الشهر: " + pricing[userLevel].private.monthly + "ج";
+            const elGroup = document.getElementById('display-price-group');
+            const elPrivate = document.getElementById('display-price-private');
+            if(elGroup) elGroup.innerText = "الشهر: " + pricing[userLevel].group.monthly + "ج";
+            if(elPrivate) elPrivate.innerText = "الشهر: " + pricing[userLevel].private.monthly + "ج";
         }
     };
 
     function updateUI(mode) {
         selectedMode = mode;
-        
-        // 1. تلوين الكارت
         document.querySelectorAll('.option-card').forEach(el => el.classList.remove('selected'));
         document.getElementById('btn-' + mode).classList.add('selected');
-
-        // 2. إظهار القسم المخفي
         document.getElementById('details-section').style.display = 'block';
         document.getElementById('mode-label').innerText = (mode === 'group' ? 'مجموعات' : 'خاص');
 
-        // 3. فلترة المواعيد (Private يظهر Private فقط)
         const slots = document.querySelectorAll('.slot-item');
-        let visibleCount = 0;
         slots.forEach(slot => {
             if (slot.dataset.mode === mode) {
                 slot.style.display = 'block';
-                visibleCount++;
             } else {
                 slot.style.display = 'none';
             }
         });
-        
-        // تصفير الموعد المختار
         document.querySelector('select[name="slot_id"]').value = "";
-        
-        // 4. حساب السعر
         calculateTotal();
     }
 
     function calculateTotal() {
         if (!selectedMode || !pricing[userLevel]) return;
-
-        // معرفة الخطة (شهري أم حصة)
-        const plan = document.querySelector('input[name="plan"]:checked').value; // monthly or session
-        
-        // جلب السعر من الجدول
+        const plan = document.querySelector('input[name="plan"]:checked').value;
         const price = pricing[userLevel][selectedMode][plan];
-
-        // العرض والحفظ
         document.getElementById('total-display').innerText = price;
         document.getElementById('final_amount').value = price;
         document.getElementById('booking_type_input').value = selectedMode + "_" + plan;
     }
 </script>
-
+<style>@keyframes fadeIn { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }</style>
 </body>
 </html>

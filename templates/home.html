@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>أكاديمية آفاق - الرئيسية</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <style>
+        :root {
+            --primary: #0E2A47; /* الكحلي */
+            --gold: #C5A059;    /* الذهبي */
+            --text-dark: #1d1d1d;
+        }
+        
+        body {
+            font-family: 'Cairo', sans-serif;
+            background-color: #f8f9fa;
+            overflow-x: hidden;
+        }
+
+        /* --- Navbar --- */
+        .navbar {
+            background-color: var(--primary);
+            padding: 15px 0;
+        }
+        .navbar-brand img {
+            height: 60px; /* حجم اللوجو */
+            filter: brightness(0) invert(1); /* جعل اللوجو أبيض ليناسب الخلفية */
+        }
+        .nav-link {
+            color: rgba(255,255,255,0.8) !important;
+            font-weight: 600;
+            margin-left: 20px;
+            transition: 0.3s;
+        }
+        .nav-link:hover { color: var(--gold) !important; }
+        .btn-nav-cta {
+            background-color: var(--gold);
+            color: white !important;
+            border-radius: 5px;
+            padding: 8px 20px;
+            font-weight: bold;
+        }
+        .btn-nav-cta:hover { background-color: #b08d48; }
+
+        /* --- Hero Section --- */
+        .hero-section {
+            position: relative;
+            background: url('images/image1.jpg') no-repeat center center/cover;
+            height: 85vh; /* ارتفاع القسم */
+            display: flex;
+            align-items: center;
+        }
+
+        /* الطبقة الزرقاء المتدرجة (Overlay) */
+        .hero-overlay {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            /* تدرج لوني من الكحلي الغامق (يمين) إلى الشفاف (يسار) */
+            background: linear-gradient(90deg, rgba(14, 42, 71, 0.95) 40%, rgba(14, 42, 71, 0.6) 100%);
+        }
+
+        .hero-content {
+            position: relative;
+            z-index: 2;
+            color: white;
+            padding-right: 50px; /* مسافة من اليمين */
+        }
+
+        .hero-title {
+            font-size: 3.5rem;
+            font-weight: 800;
+            line-height: 1.4;
+            margin-bottom: 20px;
+        }
+
+        .hero-subtitle {
+            font-size: 1.5rem;
+            opacity: 0.9;
+            margin-bottom: 40px;
+        }
+
+        /* --- Buttons --- */
+        .btn-hero {
+            padding: 15px 40px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            border-radius: 8px;
+            margin-left: 15px;
+            transition: all 0.3s;
+        }
+        
+        .btn-primary-hero {
+            background-color: var(--gold);
+            border: 2px solid var(--gold);
+            color: white;
+        }
+        .btn-primary-hero:hover {
+            background-color: transparent;
+            color: var(--gold);
+        }
+
+        .btn-outline-hero {
+            background-color: transparent;
+            border: 2px solid rgba(255,255,255,0.5);
+            color: white;
+        }
+        .btn-outline-hero:hover {
+            border-color: white;
+            background-color: rgba(255,255,255,0.1);
+        }
+
+        /* --- Cards Section (Overlapping) --- */
+        .features-container {
+            position: relative;
+            margin-top: -100px; /* هذا ما يجعل الكروت تتداخل مع الصورة */
+            z-index: 3;
+            padding-bottom: 50px;
+        }
+
+        .feature-card {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            border-bottom: 4px solid var(--gold);
+            height: 100%;
+            transition: transform 0.3s;
+        }
+        .feature-card:hover {
+            transform: translateY(-10px);
+        }
+
+        .icon-box {
+            font-size: 3rem;
+            color: var(--primary);
+            margin-bottom: 20px;
+        }
+        
+        .card-title {
+            color: var(--primary);
+            font-weight: 700;
+            margin-bottom: 15px;
+        }
+        
+        .card-text {
+            color: #666;
+            font-size: 0.95rem;
+            line-height: 1.6;
+        }
+
+        @media (max-width: 768px) {
+            .hero-title { font-size: 2.2rem; }
+            .features-container { margin-top: 30px; } /* إلغاء التداخل في الموبايل */
+            .hero-section { height: auto; padding: 50px 0; }
+        }
+    </style>
+</head>
+<body>
+
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container">
+            <a class="navbar-brand" href="#">
+                <img src="images/logo1.png" alt="Afaq Logo">
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
+                    <li class="nav-item"><a class="nav-link active" href="#">الرئيسية</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#">المسارات</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#">المعلمون</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#">اتصل بنا</a></li>
+                </ul>
+                <div class="d-flex">
+                    <a href="/login" class="btn btn-nav-cta">تسجيل الدخول</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <section class="hero-section">
+        <div class="hero-overlay"></div>
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-7 col-md-10 hero-content">
+                    <h1 class="hero-title">
+                        احفظ القرآن الكريم من منزلك <br>
+                        مع نخبة من الشيوخ المتقنين
+                    </h1>
+                    <p class="hero-subtitle">
+                        منهجية تفاعلية، مرونة في الأوقات، ومتابعة مستمرة لتضمن لك ولأطفالك حفظاً متقناً.
+                    </p>
+                    <div class="d-flex flex-wrap gap-3">
+                        <a href="/register" class="btn btn-hero btn-primary-hero">
+                            سجل الآن (طالب جديد)
+                        </a>
+                        <a href="/login" class="btn btn-hero btn-outline-hero">
+                            <i class="fas fa-play-circle ms-2"></i> دخول لحسابي
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <div class="container features-container">
+        <div class="row g-4">
+            <div class="col-md-4">
+                <div class="feature-card">
+                    <div class="icon-box">
+                        <i class="fas fa-clock"></i> </div>
+                    <h4 class="card-title">الأوقات المرنة</h4>
+                    <p class="card-text">
+                        اختر المواعيد التي تناسب جدولك اليومي، مع إمكانية تعويض الحصص وتغيير المواعيد بسهولة.
+                    </p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="feature-card">
+                    <div class="icon-box">
+                        <i class="fas fa-user-graduate"></i> </div>
+                    <h4 class="card-title">معلمون مجازون</h4>
+                    <p class="card-text">
+                        نخبة من الحفاظ المجازين بالسند المتصل للنبي ﷺ، مدربون على أحدث أساليب التعليم عن بعد.
+                    </p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="feature-card">
+                    <div class="icon-box">
+                        <i class="fas fa-laptop-code"></i> </div>
+                    <h4 class="card-title">شاشة تفاعلية</h4>
+                    <p class="card-text">
+                        منصة تعليمية متطورة تتيح للطالب والمعلم التفاعل المباشر ومشاركة المصحف الإلكتروني.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

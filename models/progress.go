@@ -1,17 +1,16 @@
 package models
 
-import( 
+import (
 	"time"
 )
 
-type Progres struct{
-	ID             uint64 `gorm:"primaryKey"`
-	CreatedAt      time.Time
-	UpdatedAt      time.Time
-    StudentID uint
-	Date time.Time
-	Surah string
-	Verses string
-	Grade string
-	Notes string
+// --- جدول الدرجات ---
+type Progress struct {
+	ID        uint `gorm:"primaryKey"`
+	StudentID string
+	Date      time.Time
+	Surah     string
+	Verses    string
+	Grade     string
+	Notes     string
 }
